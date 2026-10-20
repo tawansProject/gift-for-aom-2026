@@ -1,0 +1,15 @@
+{
+  "name": "gift-for-aom-2026",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Birthday gift web app: password, gift box, messages, handwriting photos, song and video download.",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "check": "node scripts/build.mjs --check",
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && npx --yes serve@14 public -l 3000",
+    "deploy:staging": "node scripts/deploy.mjs staging",
+    "deploy:production": "node scripts/deploy.mjs production"
+  }
+}

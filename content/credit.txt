@@ -1,0 +1,2 @@
+# Song credit shown small at the bottom of the downloaded video. Leave empty to hide.
+เซปโตวินาที – Asia7

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>A Gift for Aom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<section id="lock" class="screen" aria-label="ใส่รหัส">
+  <h1 class="lock-title">ใส่วันเกิดของคุณ<small>(ววดดปปปป)</small></h1>
+  <div class="slots" id="slots" aria-live="polite"></div>
+  <p class="hint" id="hint"></p>
+  <div class="pad" id="pad"></div>
+</section>
+
+<section id="present" class="screen out" aria-label="กล่องของขวัญ">
+  <canvas id="gl"></canvas>
+  <div class="instruction" id="instruction">
+    <p>กดซ้ำๆเพื่อเปิดกล่องของขวัญของคุณ</p>
+    <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meter"><div class="meter-fill" id="meterFill"></div></div>
+  </div>
+</section>
+<label class="haptic" id="hapticLabel" aria-hidden="true"><input type="checkbox" switch tabindex="-1" id="hapticSwitch"></label>
+
+<section id="messages" class="screen out" aria-label="ข้อความ">
+  <div class="stars" aria-hidden="true"></div>
+  <p class="msg" id="msgText" aria-live="polite"></p>
+  <button class="next" id="msgNext" type="button" disabled>ไปต่อ</button>
+  <p class="msg-count" id="msgCount"></p>
+</section>
+
+<section id="bridge" class="screen out" aria-label="ข้อความ">
+  <div class="stars" aria-hidden="true"></div>
+  <p class="msg in" id="bridgeText"></p>
+</section>
+
+<section id="photos" class="screen out" aria-label="รูปลายมือ">
+  <div class="frame"><img id="phA" alt=""><img id="phB" alt=""></div>
+  <p class="paused-hint" id="pausedHint">หยุดไว้ แตะเพื่อเล่นต่อ</p>
+  <div class="meter photo-bar"><div class="meter-fill" id="photoFill"></div></div>
+</section>
+
+<section id="ending" class="screen out" aria-label="ตอนจบ">
+  <div class="stars" aria-hidden="true"></div>
+  <h2 id="endTitle"></h2>
+  <div class="end-lines" id="endLines"></div>
+  <button class="next in primary" id="dlBtn" type="button">ดาวน์โหลดวิดีโอ</button>
+  <p class="dl-status" id="dlStatus"></p>
+</section>
+
+<div class="overlay" id="exporting" hidden>
+  <canvas id="vidCanvas"></canvas>
+  <p id="expLabel">กำลังสร้างวิดีโอ… 0%</p>
+  <div class="meter"><div class="meter-fill" id="expFill"></div></div>
+  <p id="expSub"></p>
+  <button class="next in primary" id="expSave" type="button" hidden>บันทึกวิดีโอ</button>
+  <button class="link" id="expClose" type="button" hidden>ปิด</button>
+</div>
+
+<button class="icon-btn" id="mute" type="button" aria-label="ปิดเสียง" hidden>
+  <svg class="on" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+  <svg class="off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg>
+</button>
+
+<script src="vendor/three.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
