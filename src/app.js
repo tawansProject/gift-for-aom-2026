@@ -429,7 +429,7 @@
   /* ================= Story: messages → bridge → photos → ending ================= */
   // Mitr draws ๆ (mai yamok) too high; wrap it so CSS can drop it to where Thai writing puts it
   const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const setThai = (el, text) => { el.innerHTML = esc(text).replace(/ๆ/g, '<span class="yamok">ๆ</span>'); };
+  const setThai = (el, text) => { el.innerHTML = "<span>" + esc(text).replace(/ๆ/g, '<span class="yamok">ๆ</span>') + "</span>";   // one inner span so flex parents (.msg) keep it as a single line of text };
   const swap = (fromId, toId, delay = 0) => {
     if (fromId) $(fromId).classList.add("out");
     setTimeout(() => toId && $(toId).classList.remove("out"), delay);
