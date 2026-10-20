@@ -1,6 +1,7 @@
 (() => {
   const PASSWORD = "21102001";
   const TAPS_TO_OPEN = 10;
+  const NEXT_BUTTON_DELAY_MS = 2500;   // how long each message shows before ไปกันต่อออ appears
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   // Android uses the Vibration API. iPhone Safari has none, but toggling a native switch
   // control (iOS 18+) plays the system haptic tick, so we toggle a hidden one.
@@ -429,7 +430,30 @@
   /* ================= Story: messages → bridge → photos → ending ================= */
   // Mitr draws ๆ (mai yamok) too high; wrap it so CSS can drop it to where Thai writing puts it
   const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const setThai = (el, text) => { el.innerHTML = "<span>" + esc(text).replace(/ๆ/g, '<span class="yamok">ๆ</span>') + "</span>"; }; // one inner span so flex parents (.msg) keep it as a single line of text
+  // "|" in a content line is a line break the writer chose. Each piece between markers stays on
+  // one line: if the widest piece is too wide for the screen, the whole screen's text shrinks to fit.
+  const breaks = (text) => text.split("|").map((p) => p.trim()).filter(Boolean);
+  const MIN_FIT_PX = 15;                                   // below this it wraps instead of shrinking further
+  function fitPieces(el) {
+    const pieces = [...el.querySelectorAll(".piece")];
+    el.style.fontSize = ""; el.classList.remove("piece-wrap");
+    if (!pieces.length) return;
+    const screen = el.closest(".screen"), cs = getComputedStyle(screen);
+    const avail = Math.min(512, screen.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) - 16;
+    const widest = Math.max(...pieces.map((p) => p.scrollWidth));
+    if (widest <= avail) return;
+    const base = parseFloat(getComputedStyle(el).fontSize), size = Math.floor(base * avail / widest * 10) / 10;
+    if (size >= MIN_FIT_PX) el.style.fontSize = size + "px";
+    else { el.style.fontSize = MIN_FIT_PX + "px"; el.classList.add("piece-wrap"); console.warn("Too long for one line, add a | :", el.textContent); }
+  }
+  const setThai = (el, text) => {
+    const pieces = breaks(text).map((p) => esc(p).replace(/ๆ/g, '<span class="yamok">ๆ</span>'));
+    el.innerHTML = "<span>" + (pieces.length > 1 ? pieces.map((p) => '<span class="piece">' + p + "</span>").join("<br>") : pieces.join("")) + "</span>";
+    fitPieces(el);
+  }; // one inner span so flex parents (.msg) keep it as a single line of text
+  const refit = () => document.querySelectorAll(".piece").forEach((p) => p.parentElement.parentElement && fitPieces(p.parentElement.parentElement));
+  document.fonts && document.fonts.ready.then(refit);     // Mitr is wider than the fallback font
+  addEventListener("resize", refit);
   const swap = (fromId, toId, delay = 0) => {
     if (fromId) $(fromId).classList.add("out");
     setTimeout(() => toId && $(toId).classList.remove("out"), delay);
@@ -465,7 +489,7 @@
       setThai(t, CONTENT.messages[i]);
       $("msgCount").textContent = (i + 1) + " / " + CONTENT.messages.length;
       t.classList.add("in");
-      setTimeout(() => { b.classList.add("in"); b.disabled = false; }, 800);
+      setTimeout(() => { b.classList.add("in"); b.disabled = false; }, NEXT_BUTTON_DELAY_MS);
     }, i === 0 ? 700 : 500);
   }
   $("msgNext").addEventListener("click", () => {
@@ -485,38 +509,42 @@
     setTimeout(startPhotos, 900 + 3000 + 1400);           // a beat of black before the photos
   }
 
-  const PHOTO_SEC = 5, FIRST_FADE = 1.2;                // first photo gets extra time to fade in
+  const PHOTO_SEC = 5;                                  // slow zoom length per photo (and photo time in the video)
+  // Photos move only when she taps < or >; > on the last photo goes on to the ending
   function startPhotos() {
     const list = CONTENT.photos;
     if (!list.length) return toEnding();
     swap(null, "photos");
-    let front = $("phA"), back = $("phB"), idx = -1, elapsed = -FIRST_FADE, paused = false, last = performance.now();
+    let front = $("phA"), back = $("phB"), idx = -1, shownAt = 0, done = false;
     front.classList.add("first"); back.classList.add("first");   // first photo fades in slowly
-    const total = list.length * PHOTO_SEC, fill = $("photoFill");
-    const onTap = () => { paused = !paused; $("pausedHint").classList.toggle("show", paused); };
-    $("photos").addEventListener("click", onTap);
-    function tick(now) {
-      const dt = Math.min(0.1, (now - last) / 1000); last = now;
-      if (!paused) elapsed += dt;
-      const i = Math.max(0, Math.min(list.length - 1, Math.floor(elapsed / PHOTO_SEC)));
-      if (i === 1 && front.classList.contains("first")) { $("phA").classList.remove("first"); $("phB").classList.remove("first"); }
-      if (i !== idx) {
-        idx = i;
-        back.src = list[i].src; back.style.transform = "scale(1)";
-        back.style.opacity = 1; front.style.opacity = 0;
-        [front, back] = [back, front];
-      }
-      const local = Math.max(0, Math.min(1, (elapsed - idx * PHOTO_SEC) / PHOTO_SEC));
-      if (!reduceMotion) front.style.transform = "scale(" + (1 + 0.06 * local).toFixed(4) + ")";
-      fill.style.transform = "scaleX(" + Math.max(0, Math.min(1, elapsed / total)).toFixed(4) + ")";
-      if (elapsed >= total) {
-        $("photos").removeEventListener("click", onTap);
-        swap("photos", null); setTimeout(toEnding, 900);
-        return;
-      }
-      requestAnimationFrame(tick);
+    const prev = $("photoPrev"), next = $("photoNext");
+    function show(i) {
+      if (idx === 0 && i !== 0) { $("phA").classList.remove("first"); $("phB").classList.remove("first"); }
+      idx = i; shownAt = performance.now();
+      back.src = list[i].src; back.style.transform = "scale(1)";
+      back.style.opacity = 1; front.style.opacity = 0;
+      [front, back] = [back, front];
+      $("photoFill").style.transform = "scaleX(" + ((i + 1) / list.length).toFixed(4) + ")";
+      $("photoCount").textContent = (i + 1) + " / " + list.length;
+      prev.disabled = i === 0;
     }
-    requestAnimationFrame(tick);
+    const onPrev = () => { if (idx > 0) { buzz(10); show(idx - 1); } };
+    const onNext = () => {
+      buzz(10);
+      if (idx < list.length - 1) return show(idx + 1);
+      done = true;
+      prev.removeEventListener("click", onPrev); next.removeEventListener("click", onNext);
+      swap("photos", null); setTimeout(toEnding, 900);
+    };
+    prev.addEventListener("click", onPrev); next.addEventListener("click", onNext);
+    function zoom(now) {
+      if (done) return;
+      const local = Math.min(1, (now - shownAt) / 1000 / PHOTO_SEC);
+      if (!reduceMotion) front.style.transform = "scale(" + (1 + 0.06 * local).toFixed(4) + ")";
+      requestAnimationFrame(zoom);
+    }
+    show(0);
+    requestAnimationFrame(zoom);
   }
 
   function toEnding() {
@@ -561,6 +589,12 @@
       let t = 0; segs.forEach((s) => { s.t0 = t; t += s.dur; });
       return { segs, total: t };
     }
+    // largest font size up to `size` at which every line fits in maxW
+    function fitFont(ctx, weight, size, lines, maxW) {
+      ctx.font = weight + " " + size + "px Mitr, sans-serif";
+      const widest = Math.max(0, ...lines.map((l) => ctx.measureText(l).width));
+      return widest > maxW ? Math.floor(size * maxW / widest) : size;
+    }
     const ease = (u) => 1 - Math.pow(1 - u, 3);
     // fillText that lowers ๆ like the page does (Mitr draws it too high)
     function fillThai(ctx, text, x, y) {
@@ -588,18 +622,24 @@
         const sz = 640, bob = Math.sin(t * 2) * 10;
         ctx.drawImage(giftBody, (W - sz) / 2, H * 0.42 - sz / 2 + bob, sz, sz);
         ctx.drawImage(giftLid, (W - sz) / 2, H * 0.42 - sz / 2 + bob - 10 * Math.abs(Math.sin(t * 3)), sz, sz);
-        ctx.fillStyle = "#f4f2ff"; ctx.font = "500 92px Mitr, sans-serif";
-        fillThai(ctx, CONTENT.ending[0] || "สุขสันต์วันเกิด", W / 2, H * 0.68 + rise);
+        ctx.fillStyle = "#f4f2ff";
+        ctx.font = "500 " + fitFont(ctx, "500", 92, breaks(CONTENT.ending[0] || "สุขสันต์วันเกิด"), W - 160) + "px Mitr, sans-serif";
+        breaks(CONTENT.ending[0] || "สุขสันต์วันเกิด").forEach((l, i) => fillThai(ctx, l, W / 2, H * 0.68 + i * 108 + rise));
       } else if (seg.type === "text" || seg.type === "end") {
         const lines = seg.type === "end" ? CONTENT.ending : null;
         ctx.fillStyle = "#f4f2ff";
         if (lines) {
-          ctx.font = "500 96px Mitr, sans-serif"; fillThai(ctx, lines[0] || "", W / 2, H * 0.44 + rise);
-          ctx.font = "300 52px Mitr, sans-serif"; ctx.fillStyle = "#b9b3d8";
-          lines.slice(1).forEach((l, i) => fillThai(ctx, l, W / 2, H * 0.44 + 140 + i * 76 + rise));
+          const title = breaks(lines[0] || "");
+          ctx.font = "500 " + fitFont(ctx, "500", 96, title, W - 160) + "px Mitr, sans-serif";
+          title.forEach((l, i) => fillThai(ctx, l, W / 2, H * 0.44 + i * 116 + rise));
+          ctx.font = "300 " + fitFont(ctx, "300", 52, lines.slice(1).flatMap(breaks), W - 160) + "px Mitr, sans-serif"; ctx.fillStyle = "#b9b3d8";
+          lines.slice(1).flatMap(breaks).forEach((l, i) => fillThai(ctx, l, W / 2, H * 0.44 + (title.length - 1) * 116 + 140 + i * 76 + rise));
         } else {
-          ctx.font = "400 68px Mitr, sans-serif";
-          const ls = wrap(ctx, seg.text, W - 200), lh = 112, y0 = H / 2 - ((ls.length - 1) * lh) / 2;
+          const pieces = breaks(seg.text);
+          // with | markers each piece stays on one line (shrunk to fit), like the page
+          const size = pieces.length > 1 ? fitFont(ctx, "400", 68, pieces, W - 160) : 68;
+          ctx.font = "400 " + size + "px Mitr, sans-serif";
+          const ls = pieces.length > 1 ? pieces : wrap(ctx, seg.text, W - 200), lh = size * 1.65, y0 = H / 2 - ((ls.length - 1) * lh) / 2;
           ls.forEach((l, i) => fillThai(ctx, l, W / 2, y0 + i * lh + rise));
         }
       } else if (seg.type === "photo" && seg.img.complete && seg.img.naturalWidth) {

@@ -1,5 +1,6 @@
 # หน้าสุดท้าย: บรรทัดแรก = หัวข้อใหญ่, บรรทัดต่อไป = ข้อความเล็ก
 # Ending screen: first line is the big title, the rest are small lines.
-สุขสันต์วันเกิดนะ
-รักเธอที่สุด
-— Tawan
+
+สุขสันต์วันเกิดน้า
+รักคุณ และ ภูมิใจในตัวคุณมากๆ
+— อาร์ท Your Fav. Chinese

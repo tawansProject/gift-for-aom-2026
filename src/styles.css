@@ -114,10 +114,13 @@ body {
   opacity: 0; transform: translateY(14px); transition: opacity .9s ease, transform .9s ease;
 }
 .msg.in { opacity: 1; transform: none; }
+/* a piece between | markers stays on one line; app.js shrinks the text so the widest one fits */
+.piece { display: inline-block; white-space: nowrap; }
+.piece-wrap .piece { white-space: normal; max-width: 100%; }
 .msg-count { position: absolute; bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px)); margin: 0; font-size: 13px; color: var(--muted); letter-spacing: .08em; font-variant-numeric: tabular-nums; }
 
 /* ---------- Photos ---------- */
-#photos { padding: 0; cursor: pointer; }
+#photos { padding: 0; }
 .frame {
   position: absolute;
   top: max(28px, calc(env(safe-area-inset-top, 0px) + 16px)); bottom: max(64px, calc(env(safe-area-inset-bottom, 0px) + 52px));
@@ -126,10 +129,21 @@ body {
 .frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 1s ease; will-change: transform, opacity; }
 .frame img.first { transition-duration: 2.2s; }
 #photos { transition-duration: 1.6s; }
-.photo-bar { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 18px)); }
-.photo-bar .meter-fill { transition: none; }
-.paused-hint { position: absolute; top: 50%; left: 0; right: 0; margin: 0; text-align: center; font-size: 16px; color: var(--fg); opacity: 0; transition: opacity .3s; pointer-events: none; text-shadow: 0 2px 12px #000; }
-.paused-hint.show { opacity: 1; }
+.photo-bar {
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+  display: flex; align-items: center; gap: 16px;
+}
+.photo-bar .meter { width: min(200px, 44vw); }
+.photo-progress { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.photo-count { margin: 0; font-size: 13px; color: var(--muted); letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.photo-nav {
+  width: 48px; height: 48px; border-radius: 50%; flex: none; cursor: pointer;
+  font: 500 22px var(--font); color: #000; background: #fff; border: 0;
+  transition: opacity .3s, transform .15s;
+}
+.photo-nav:active { transform: scale(.92); background: #e6e6ee; }
+.photo-nav:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; }
+.photo-nav[disabled] { opacity: .25; cursor: default; }
 
 /* ---------- Ending ---------- */
 #ending h2 { margin: 0; font-weight: 500; font-size: clamp(32px, 7.5vw, 60px); text-wrap: balance; }

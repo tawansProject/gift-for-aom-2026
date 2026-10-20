@@ -30,6 +30,10 @@ birthday-app/
 - The lines in there now are **placeholders**. Replace them with your own words.
 - `bridge.txt` holds the single line before the photos. Delete its text to skip it.
 - `ending.txt` holds the last screen: the first line is the big title, and the lines after it are small.
+- To choose where a line breaks, put `|` there. It's still one screen, and each piece stays on one line if it fits (on the site and in the video):
+  ```
+  ขอบคุณที่เลือกอยู่ข้างกันทุกๆวัน | และคอยเป็นความสุขให้แก่กันและกัน
+  ```
 
 ### 2. Handwriting photos
 | | |
@@ -39,7 +43,7 @@ birthday-app/
 | **File size** | under 1 MB each, 1.5 MB at most |
 | **Names** | `01.jpg`, `02.jpg`, `03.jpg`, … (they play in this order) |
 
-- Each photo is shown for 5 s with a slow zoom and a crossfade. She can tap to pause.
+- Photos don't change by themselves: she taps **>** for the next one and **<** to go back, with a slow zoom and a crossfade. The bar shows which photo she's on. **>** on the last photo goes to the ending. (In the downloaded video each photo still plays for 4 s.)
 - Photos are fitted without cropping, so other sizes work too. `npm run check` will warn you about them.
 - Delete the `_placeholder-*.jpg` samples once your photos are in. They're only used while the folder has no real photos.
 

@@ -45,8 +45,14 @@
 
 <section id="photos" class="screen out" aria-label="รูปลายมือ">
   <div class="frame"><img id="phA" alt=""><img id="phB" alt=""></div>
-  <p class="paused-hint" id="pausedHint">หยุดไว้ แตะเพื่อเล่นต่อ</p>
-  <div class="meter photo-bar"><div class="meter-fill" id="photoFill"></div></div>
+  <div class="photo-bar">
+    <button class="photo-nav" id="photoPrev" type="button" aria-label="รูปก่อนหน้า">&lt;</button>
+    <div class="photo-progress">
+      <div class="meter"><div class="meter-fill" id="photoFill"></div></div>
+      <p class="photo-count" id="photoCount"></p>
+    </div>
+    <button class="photo-nav" id="photoNext" type="button" aria-label="รูปถัดไป">&gt;</button>
+  </div>
 </section>
 
 <section id="ending" class="screen out" aria-label="ตอนจบ">
