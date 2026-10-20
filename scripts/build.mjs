@@ -71,7 +71,6 @@ if (!songs.length) warnings.push("No song in content/song yet, so the site will 
 if (songs.length > 1) warnings.push(`More than one song in content/song, so only ${songs[0]} is used.`);
 const song = songs[0] || null;
 if (song && statSync(join(CONTENT, "song", song)).size > 12 * 1048576) warnings.push(`${song} is over 12 MB. Try 128–192 kbps.`);
-const credit = song ? (lines("credit.txt")[0] || "") : "";
 
 // --- report ---
 console.log(`\nContent: ${messages.length} messages, ${bridge ? "1 bridge line" : "no bridge line"}, ${ending.length} ending lines, ${photos.length} photos, song: ${song || "none"}`);
@@ -88,7 +87,7 @@ photos.forEach((p) => cpSync(join(CONTENT, "photos", p.file), join(OUT, "photos"
 let songSrc = null;
 if (song) { mkdirSync(join(OUT, "song"), { recursive: true }); cpSync(join(CONTENT, "song", song), join(OUT, "song", song)); songSrc = "song/" + encodeURIComponent(song); }
 writeFileSync(join(OUT, "content.json"), JSON.stringify({
-  messages, bridge, ending, credit, song: songSrc,
+  messages, bridge, ending, song: songSrc,
   photos: photos.map(({ src, w, h }) => ({ src, w, h })),
   builtAt: new Date().toISOString()
 }, null, 2));

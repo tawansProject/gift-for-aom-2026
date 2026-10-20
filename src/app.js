@@ -38,7 +38,7 @@
     [...slotsEl.children].forEach((s, i) => {
       s.textContent = entry[i] || "";
       s.classList.toggle("filled", i < entry.length);
-      s.classList.toggle("next", i === entry.length);
+      s.classList.toggle("current", i === entry.length);
     });
   }
   function press(k) {
@@ -372,7 +372,7 @@
   }
 
   /* ================= Content (built from the content/ folder) ================= */
-  const FALLBACK = { messages: ["สุขสันต์วันเกิดนะ"], bridge: "", ending: ["สุขสันต์วันเกิดนะ"], photos: [], song: null, credit: "" };
+  const FALLBACK = { messages: ["สุขสันต์วันเกิดนะ"], bridge: "", ending: ["สุขสันต์วันเกิดนะ"], photos: [], song: null };
   let CONTENT = FALLBACK;
   const contentReady = fetch("content.json", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : FALLBACK))
@@ -520,12 +520,11 @@
     $("endLines").innerHTML = "";
     rest.forEach((l) => { const p = document.createElement("p"); p.textContent = l; $("endLines").appendChild(p); });
     swap(null, "ending", 100);
-    Music.setLevel(0.35, 3);
   }
 
   /* ================= Video export (canvas + MediaRecorder, made on her device) ================= */
   const Video = (() => {
-    const W = 1080, H = 1920, FPS = 30;
+    const W = 1080, H = 1920, FPS = 30, FADE_OUT = 3;
     const svgImg = (svg) => { const im = new Image(); im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); return im; };
     const giftBody = svgImg(BODY_SVG), giftLid = svgImg(LID_SVG);
     const stars = Array.from({ length: 140 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 0.8 + Math.random() * 2.2, ph: Math.random() * 6.28 }));
@@ -553,13 +552,13 @@
       CONTENT.messages.forEach((text) => segs.push({ type: "text", text, dur: 3.4 }));
       if (CONTENT.bridge) segs.push({ type: "text", text: CONTENT.bridge, dur: 2.8 });
       photoImgs.forEach((img) => segs.push({ type: "photo", img, dur: 4 }));
-      segs.push({ type: "end", dur: 4 });
+      segs.push({ type: "end", dur: 5 });
       let t = 0; segs.forEach((s) => { s.t0 = t; t += s.dur; });
       return { segs, total: t };
     }
     const ease = (u) => 1 - Math.pow(1 - u, 3);
 
-    function draw(ctx, segs, t) {
+    function draw(ctx, segs, t, total) {
       ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
       stars.forEach((s) => {
         ctx.globalAlpha = 0.15 + 0.35 * (0.5 + 0.5 * Math.sin(t * 1.6 + s.ph));
@@ -596,10 +595,8 @@
         ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
       }
       ctx.globalAlpha = 1;
-      if (CONTENT.credit) {
-        ctx.fillStyle = "rgba(185,179,216,0.7)"; ctx.font = "300 30px Mitr, sans-serif";
-        ctx.fillText("♪ " + CONTENT.credit, W / 2, H - 90);
-      }
+      const fadeOut = (t - (total - FADE_OUT)) / FADE_OUT;  // picture fades to black with the song
+      if (fadeOut > 0) { ctx.fillStyle = "rgba(0,0,0," + Math.min(1, fadeOut).toFixed(3) + ")"; ctx.fillRect(0, 0, W, H); }
     }
 
     function make() {
@@ -618,20 +615,20 @@
       const actx = Music.ctx;
       if (CONTENT.song && actx) {
         try {
-          recAudio = new Audio(CONTENT.song); recAudio.setAttribute("playsinline", "");
+          if (actx.state === "suspended") actx.resume();
+          recAudio = new Audio(CONTENT.song); recAudio.loop = true; recAudio.setAttribute("playsinline", "");
           const src = actx.createMediaElementSource(recAudio);
           const dest = actx.createMediaStreamDestination();
           recGain = actx.createGain(); recGain.gain.value = 0;
           src.connect(recGain).connect(dest);
           audioTrack = dest.stream.getAudioTracks()[0];
           const now = actx.currentTime;
-          recGain.gain.linearRampToValueAtTime(1, now + 1);
-          recGain.gain.setValueAtTime(1, now + Math.max(1, total - 2.5));
-          recGain.gain.linearRampToValueAtTime(0, now + total);
+          recGain.gain.linearRampToValueAtTime(1, now + 1);                      // gentle fade in
+          recGain.gain.setValueAtTime(1, now + Math.max(1, total - FADE_OUT));
+          recGain.gain.linearRampToValueAtTime(0, now + total);                  // fade out at the end
           recAudio.play().catch(() => {});                 // must start inside the tap
         } catch (e) { recAudio = null; audioTrack = null; }
       }
-      Music.setLevel(0, 0.5);
 
       const stream = canvas.captureStream(FPS);
       if (audioTrack) stream.addTrack(audioTrack);
@@ -657,16 +654,15 @@
         $("expLabel").textContent = "วิดีโอพร้อมแล้ว";
         $("expSub").textContent = (file.size / 1048576).toFixed(1) + " MB · " + ext.toUpperCase();
         $("expSave").hidden = false; $("expClose").hidden = false;
-        Music.setLevel(0.35, 1.5);
         busy = false;
       };
 
-      draw(ctx, segs, 0);
+      draw(ctx, segs, 0, total);
       rec.start(1000);
       const t0 = performance.now();
       (function loop() {
         const t = (performance.now() - t0) / 1000;
-        draw(ctx, segs, Math.min(t, total - 0.001));
+        draw(ctx, segs, Math.min(t, total - 0.001), total);
         const f = Math.min(1, t / total);
         $("expFill").style.transform = "scaleX(" + f.toFixed(3) + ")";
         $("expLabel").textContent = "กำลังสร้างวิดีโอ… " + Math.round(f * 100) + "%";

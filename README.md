@@ -12,7 +12,6 @@ birthday-app/
 │   ├── messages.txt      the messages, one line per screen (ไปต่อ between them)
 │   ├── bridge.txt        one short line shown before the photos (optional)
 │   ├── ending.txt        last screen: first line is the title, the rest are small lines
-│   ├── credit.txt        song credit shown in the downloaded video
 │   ├── photos/           handwriting photos: 01.jpg, 02.jpg, … (1200 × 1600 px)
 │   └── song/             one .mp3 or .m4a file
 ├── src/                  the app (HTML, CSS, JS, three.js); no need to touch
@@ -47,7 +46,8 @@ birthday-app/
 ### 3. The song
 - Put **one** `.mp3` or `.m4a` file in `content/song/`. Any file name works.
 - 128–192 kbps is plenty, which comes to about 3–5 MB.
-- It starts on the 10th gift tap and plays through the messages and photos. It's quieter on the ending screen and is mixed into the downloaded video.
+- It starts on the 10th gift tap and keeps playing through the messages, photos and the download page. It loops if it ends early.
+- The downloaded video has the song too: it fades in at the start and fades out, with the picture, over the last 3 s.
 - Use a copy you bought or own. Don't rip it from YouTube.
 
 ### Check your content
