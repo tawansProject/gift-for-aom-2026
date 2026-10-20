@@ -53,9 +53,31 @@ birthday-app/
 ### Check your content
 ```bash
 npm run check        # lists what it found and warns about photo sizes, missing song, etc.
-npm run dev          # builds and serves http://localhost:3000 to try it yourself
 ```
 The password is **21102001**, set in `src/app.js` as `PASSWORD`.
+
+## Workflow: local → staging → production
+
+**1. Local**
+```bash
+git checkout staging && git pull       # always start from the latest staging
+npm run dev                            # http://localhost:3000, plus a Network address for your phone
+```
+- Edit anything in `src/` or `content/` and save. The page rebuilds and reloads by itself, with no restart needed.
+- To test on your iPhone or iPad, open the **Network** address the command prints. Your phone must be on the same Wi-Fi.
+- Over local `http://`, iPhone won't show the "Save Video" sheet. The video downloads as a file instead.
+
+**2. Staging**, once it looks right locally
+```bash
+git add -A && git commit -m "what you changed" && git push      # on the staging branch
+```
+Vercel rebuilds `https://gift-for-aom-2026-staging.vercel.app` within about a minute. Check it on your phone.
+
+**3. Production**, when staging is good
+```bash
+git checkout main && git merge staging && git push && git checkout staging
+```
+That updates `https://gift-for-aom-2026.vercel.app`, the link she gets.
 
 ## Deploying (Vercel): staging and production
 
