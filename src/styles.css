@@ -71,8 +71,7 @@ body {
 .meter { width: min(260px, 60vw); height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .meter-fill {
   height: 100%; width: 100%; border-radius: inherit; transform-origin: left center; transform: scaleX(0);
-  background: linear-gradient(90deg, var(--blue), var(--purple));
-  box-shadow: 0 0 12px rgba(154, 92, 255, .6);
+  background: #ffffff;
   transition: transform .45s cubic-bezier(.22, 1, .36, 1);
 }
 .haptic { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
@@ -87,7 +86,9 @@ body {
 .next.in { opacity: 1; transform: none; }
 .next:active { background: rgba(63, 116, 255, .22); border-color: var(--blue); }
 .next:focus-visible, .icon-btn:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; }
-.next.primary { border-color: transparent; background: linear-gradient(90deg, var(--blue), var(--purple)); box-shadow: 0 0 24px rgba(154, 92, 255, .45); }
+.next.primary { border-color: #ffffff; background: #ffffff; color: #000000; }
+.next.primary:active { background: #e6e6ee; border-color: #e6e6ee; }
+.yamok { position: relative; top: .2em; }
 .link { font: 400 15px var(--font); color: var(--muted); background: none; border: 0; padding: 8px 12px; cursor: pointer; }
 .icon-btn {
   position: fixed; z-index: 15; width: 44px; height: 44px; border-radius: 50%;
@@ -123,6 +124,8 @@ body {
   left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
 }
 .frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 1s ease; will-change: transform, opacity; }
+.frame img.first { transition-duration: 2.2s; }
+#photos { transition-duration: 1.6s; }
 .photo-bar { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 18px)); }
 .photo-bar .meter-fill { transition: none; }
 .paused-hint { position: absolute; top: 50%; left: 0; right: 0; margin: 0; text-align: center; font-size: 16px; color: var(--fg); opacity: 0; transition: opacity .3s; pointer-events: none; text-shadow: 0 2px 12px #000; }
@@ -151,3 +154,6 @@ body {
   .screen { transition-duration: 300ms; }
   .instruction p { animation: none; }
 }
+
+/* ไปกันต่อออ sits low on the screen, above the counter */
+#msgNext { position: absolute; bottom: max(76px, calc(env(safe-area-inset-bottom, 0px) + 64px)); left: 50%; translate: -50% 0; }

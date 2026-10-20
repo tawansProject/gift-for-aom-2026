@@ -39,7 +39,7 @@ birthday-app/
 | **File size** | under 1 MB each, 1.5 MB at most |
 | **Names** | `01.jpg`, `02.jpg`, `03.jpg`, … (they play in this order) |
 
-- Each photo is shown for 4.5 s with a slow zoom and a crossfade. She can tap to pause.
+- Each photo is shown for 5 s with a slow zoom and a crossfade. She can tap to pause.
 - Photos are fitted without cropping, so other sizes work too. `npm run check` will warn you about them.
 - Delete the `_placeholder-*.jpg` samples once your photos are in. They're only used while the folder has no real photos.
 

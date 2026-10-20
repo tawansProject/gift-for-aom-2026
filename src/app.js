@@ -427,6 +427,9 @@
   document.addEventListener("pointerdown", () => Music.unlock(), { capture: true });
 
   /* ================= Story: messages → bridge → photos → ending ================= */
+  // Mitr draws ๆ (mai yamok) too high; wrap it so CSS can drop it to where Thai writing puts it
+  const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const setThai = (el, text) => { el.innerHTML = esc(text).replace(/ๆ/g, '<span class="yamok">ๆ</span>'); };
   const swap = (fromId, toId, delay = 0) => {
     if (fromId) $(fromId).classList.add("out");
     setTimeout(() => toId && $(toId).classList.remove("out"), delay);
@@ -459,7 +462,7 @@
     const t = $("msgText"), b = $("msgNext");
     t.classList.remove("in"); b.classList.remove("in"); b.disabled = true;
     setTimeout(() => {
-      t.textContent = CONTENT.messages[i];
+      setThai(t, CONTENT.messages[i]);
       $("msgCount").textContent = (i + 1) + " / " + CONTENT.messages.length;
       t.classList.add("in");
       setTimeout(() => { b.classList.add("in"); b.disabled = false; }, 800);
@@ -476,34 +479,36 @@
   function toBridge() {
     $("msgNext").disabled = true;
     if (!CONTENT.bridge) { swap("messages", null); return setTimeout(startPhotos, 900); }
-    $("bridgeText").textContent = CONTENT.bridge;
+    setThai($("bridgeText"), CONTENT.bridge);
     swap("messages", "bridge", 900);
     setTimeout(() => swap("bridge", null), 900 + 3000);
-    setTimeout(startPhotos, 900 + 3000 + 900);
+    setTimeout(startPhotos, 900 + 3000 + 1400);           // a beat of black before the photos
   }
 
-  const PHOTO_SEC = 4.5;
+  const PHOTO_SEC = 5, FIRST_FADE = 1.2;                // first photo gets extra time to fade in
   function startPhotos() {
     const list = CONTENT.photos;
     if (!list.length) return toEnding();
     swap(null, "photos");
-    let front = $("phA"), back = $("phB"), idx = -1, elapsed = 0, paused = false, last = performance.now();
+    let front = $("phA"), back = $("phB"), idx = -1, elapsed = -FIRST_FADE, paused = false, last = performance.now();
+    front.classList.add("first"); back.classList.add("first");   // first photo fades in slowly
     const total = list.length * PHOTO_SEC, fill = $("photoFill");
     const onTap = () => { paused = !paused; $("pausedHint").classList.toggle("show", paused); };
     $("photos").addEventListener("click", onTap);
     function tick(now) {
       const dt = Math.min(0.1, (now - last) / 1000); last = now;
       if (!paused) elapsed += dt;
-      const i = Math.min(list.length - 1, Math.floor(elapsed / PHOTO_SEC));
+      const i = Math.max(0, Math.min(list.length - 1, Math.floor(elapsed / PHOTO_SEC)));
+      if (i === 1 && front.classList.contains("first")) { $("phA").classList.remove("first"); $("phB").classList.remove("first"); }
       if (i !== idx) {
         idx = i;
         back.src = list[i].src; back.style.transform = "scale(1)";
         back.style.opacity = 1; front.style.opacity = 0;
         [front, back] = [back, front];
       }
-      const local = Math.min(1, (elapsed - idx * PHOTO_SEC) / PHOTO_SEC);
+      const local = Math.max(0, Math.min(1, (elapsed - idx * PHOTO_SEC) / PHOTO_SEC));
       if (!reduceMotion) front.style.transform = "scale(" + (1 + 0.06 * local).toFixed(4) + ")";
-      fill.style.transform = "scaleX(" + Math.min(1, elapsed / total).toFixed(4) + ")";
+      fill.style.transform = "scaleX(" + Math.max(0, Math.min(1, elapsed / total)).toFixed(4) + ")";
       if (elapsed >= total) {
         $("photos").removeEventListener("click", onTap);
         swap("photos", null); setTimeout(toEnding, 900);
@@ -516,9 +521,9 @@
 
   function toEnding() {
     const [title, ...rest] = CONTENT.ending.length ? CONTENT.ending : ["สุขสันต์วันเกิดนะ"];
-    $("endTitle").textContent = title;
+    setThai($("endTitle"), title);
     $("endLines").innerHTML = "";
-    rest.forEach((l) => { const p = document.createElement("p"); p.textContent = l; $("endLines").appendChild(p); });
+    rest.forEach((l) => { const p = document.createElement("p"); setThai(p, l); $("endLines").appendChild(p); });
     swap(null, "ending", 100);
   }
 
@@ -557,6 +562,15 @@
       return { segs, total: t };
     }
     const ease = (u) => 1 - Math.pow(1 - u, 3);
+    // fillText that lowers ๆ like the page does (Mitr draws it too high)
+    function fillThai(ctx, text, x, y) {
+      if (!text.includes("ๆ")) return ctx.fillText(text, x, y);
+      const size = parseFloat(/(\d+)px/.exec(ctx.font)[1]), parts = text.split(/(ๆ)/);
+      const total = ctx.measureText(text).width, align = ctx.textAlign;
+      let cx = x - total / 2; ctx.textAlign = "left";
+      parts.forEach((part) => { ctx.fillText(part, cx, part === "ๆ" ? y + size * 0.2 : y); cx += ctx.measureText(part).width; });
+      ctx.textAlign = align;
+    }
 
     function draw(ctx, segs, t, total) {
       ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
@@ -575,18 +589,18 @@
         ctx.drawImage(giftBody, (W - sz) / 2, H * 0.42 - sz / 2 + bob, sz, sz);
         ctx.drawImage(giftLid, (W - sz) / 2, H * 0.42 - sz / 2 + bob - 10 * Math.abs(Math.sin(t * 3)), sz, sz);
         ctx.fillStyle = "#f4f2ff"; ctx.font = "500 92px Mitr, sans-serif";
-        ctx.fillText(CONTENT.ending[0] || "สุขสันต์วันเกิด", W / 2, H * 0.68 + rise);
+        fillThai(ctx, CONTENT.ending[0] || "สุขสันต์วันเกิด", W / 2, H * 0.68 + rise);
       } else if (seg.type === "text" || seg.type === "end") {
         const lines = seg.type === "end" ? CONTENT.ending : null;
         ctx.fillStyle = "#f4f2ff";
         if (lines) {
-          ctx.font = "500 96px Mitr, sans-serif"; ctx.fillText(lines[0] || "", W / 2, H * 0.44 + rise);
+          ctx.font = "500 96px Mitr, sans-serif"; fillThai(ctx, lines[0] || "", W / 2, H * 0.44 + rise);
           ctx.font = "300 52px Mitr, sans-serif"; ctx.fillStyle = "#b9b3d8";
-          lines.slice(1).forEach((l, i) => ctx.fillText(l, W / 2, H * 0.44 + 140 + i * 76 + rise));
+          lines.slice(1).forEach((l, i) => fillThai(ctx, l, W / 2, H * 0.44 + 140 + i * 76 + rise));
         } else {
           ctx.font = "400 68px Mitr, sans-serif";
           const ls = wrap(ctx, seg.text, W - 200), lh = 112, y0 = H / 2 - ((ls.length - 1) * lh) / 2;
-          ls.forEach((l, i) => ctx.fillText(l, W / 2, y0 + i * lh + rise));
+          ls.forEach((l, i) => fillThai(ctx, l, W / 2, y0 + i * lh + rise));
         }
       } else if (seg.type === "photo" && seg.img.complete && seg.img.naturalWidth) {
         const boxW = W - 120, boxH = H - 420, im = seg.img;
@@ -642,8 +656,8 @@
       try { navigator.wakeLock && navigator.wakeLock.request("screen").then((l) => (lock = l)).catch(() => {}); } catch (e) {}
 
       $("exporting").hidden = false; $("expSave").hidden = true; $("expClose").hidden = true;
-      $("expLabel").textContent = "กำลังสร้างวิดีโอ… 0%"; $("expFill").style.transform = "scaleX(0)";
-      $("expSub").textContent = "เปิดหน้าจอค้างไว้จนกว่าจะเสร็จนะ";
+      $("expLabel").textContent = "กำลังสร้างวีดีโอ… 0%"; $("expFill").style.transform = "scaleX(0)";
+      $("expSub").textContent = "เปิดหน้าจอค้างไว้จนกว่าจะเสร็จน้าา";
 
       rec.onstop = () => {
         if (recAudio) recAudio.pause();
@@ -651,8 +665,8 @@
         const type = (rec.mimeType || mime || "video/webm").split(";")[0];
         const ext = type.includes("mp4") ? "mp4" : "webm";
         file = new File([new Blob(chunks, { type })], "gift-for-aom." + ext, { type });
-        $("expLabel").textContent = "วิดีโอพร้อมแล้ว";
-        $("expSub").textContent = (file.size / 1048576).toFixed(1) + " MB · " + ext.toUpperCase();
+        $("expLabel").textContent = "วีดีโอพร้อมแระ";
+        $("expSub").textContent = "";
         $("expSave").hidden = false; $("expClose").hidden = false;
         busy = false;
       };
@@ -665,7 +679,7 @@
         draw(ctx, segs, Math.min(t, total - 0.001), total);
         const f = Math.min(1, t / total);
         $("expFill").style.transform = "scaleX(" + f.toFixed(3) + ")";
-        $("expLabel").textContent = "กำลังสร้างวิดีโอ… " + Math.round(f * 100) + "%";
+        $("expLabel").textContent = "กำลังสร้างวีดีโอ… " + Math.round(f * 100) + "%";
         if (t < total) requestAnimationFrame(loop); else rec.stop();
       })();
     }

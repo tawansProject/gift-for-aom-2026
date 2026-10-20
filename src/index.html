@@ -15,6 +15,7 @@
 </head>
 <body>
 <section id="lock" class="screen" aria-label="ใส่รหัส">
+  <div class="stars" aria-hidden="true"></div>
   <h1 class="lock-title">ใส่วันเกิดของคุณ<small>(ววดดปปปป)</small></h1>
   <div class="slots" id="slots" aria-live="polite"></div>
   <p class="hint" id="hint"></p>
@@ -24,7 +25,7 @@
 <section id="present" class="screen out" aria-label="กล่องของขวัญ">
   <canvas id="gl"></canvas>
   <div class="instruction" id="instruction">
-    <p>กดซ้ำๆเพื่อเปิดกล่องของขวัญของคุณ</p>
+    <p>กดซ้ำ<span class="yamok">ๆ</span>เพื่อเปิดกล่องของขวัญของคุณ</p>
     <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meter"><div class="meter-fill" id="meterFill"></div></div>
   </div>
 </section>
@@ -33,7 +34,7 @@
 <section id="messages" class="screen out" aria-label="ข้อความ">
   <div class="stars" aria-hidden="true"></div>
   <p class="msg" id="msgText" aria-live="polite"></p>
-  <button class="next" id="msgNext" type="button" disabled>ไปต่อ</button>
+  <button class="next" id="msgNext" type="button" disabled>ไปกันต่อออ</button>
   <p class="msg-count" id="msgCount"></p>
 </section>
 
@@ -52,16 +53,16 @@
   <div class="stars" aria-hidden="true"></div>
   <h2 id="endTitle"></h2>
   <div class="end-lines" id="endLines"></div>
-  <button class="next in primary" id="dlBtn" type="button">ดาวน์โหลดวิดีโอ</button>
+  <button class="next in primary" id="dlBtn" type="button">โหลดวีดีโอไปดูได้น้า อิอิ</button>
   <p class="dl-status" id="dlStatus"></p>
 </section>
 
 <div class="overlay" id="exporting" hidden>
   <canvas id="vidCanvas"></canvas>
-  <p id="expLabel">กำลังสร้างวิดีโอ… 0%</p>
+  <p id="expLabel">กำลังสร้างวีดีโอ… 0%</p>
   <div class="meter"><div class="meter-fill" id="expFill"></div></div>
   <p id="expSub"></p>
-  <button class="next in primary" id="expSave" type="button" hidden>บันทึกวิดีโอ</button>
+  <button class="next in primary" id="expSave" type="button" hidden>โหลดวีดีโอเรยย</button>
   <button class="link" id="expClose" type="button" hidden>ปิด</button>
 </div>
 
